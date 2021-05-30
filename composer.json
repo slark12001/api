@@ -1,0 +1,22 @@
+{
+  "name": "vendor_name/api",
+  "description": "description",
+  "minimum-stability": "stable",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "slark",
+      "email": "email@example.com"
+    }
+  ],
+  "require": {
+    "ext-pdo": "*"
+  },
+  "autoload": {
+    "files": [
+      "config/Database.php",
+      "models/Product.php",
+      "models/Category.php"
+    ]
+  }
+}
