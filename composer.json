@@ -10,11 +10,13 @@
     }
   ],
   "require": {
-    "ext-pdo": "*"
+    "ext-pdo": "*",
+    "ext-json": "*"
   },
   "autoload": {
     "files": [
       "config/Database.php",
+      "models/Base.php",
       "models/Product.php",
       "models/Category.php"
     ]

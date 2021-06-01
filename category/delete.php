@@ -8,20 +8,26 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 
 // подключим файл для соединения с базой и объектом Product
 require_once $_SERVER['DOCUMENT_ROOT'] . '/api/vendor/autoload.php';
-
+if ($_SERVER["REQUEST_METHOD"] != "POST")
+    return;
 // получаем соединение с БД
-$database = new Database();
-$db = $database->getConnection();
-
+//$database = new Database();
+//$db = $database->getConnection();
+$data = (object) $_POST;
 // подготовка объекта
-$category = new Category($db);
+$category = Category::find(['id' => intval($data->id)]);
 
-$data = json_decode(file_get_contents("php://input"));
+if(!$category){
+    // код ответа - 503 Сервис не доступен
+    http_response_code(503);
 
-$category->id = $data->id ?? 0;
+    // сообщим об этом пользователю
+    echo json_encode(["message" => "Не удалось удалить категорию."]);
 
+    return false;
+}
 
-if ($category->id > 0 && $category->delete()) {
+if ($category->delete()) {
 
     // код ответа - 200 ok
     http_response_code(200);

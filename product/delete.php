@@ -8,22 +8,29 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 
 // подключим файл для соединения с базой и объектом Product
 require_once $_SERVER['DOCUMENT_ROOT'] . '/api/vendor/autoload.php';
-
+if($_SERVER['REQUEST_METHOD'] != "POST")
+    return;
 // получаем соединение с БД
-$database = new Database();
-$db = $database->getConnection();
-
-// подготовка объекта
-$product = new Product($db);
-
+//$database = new Database();
+//$db = $database->getConnection();
 // получаем id товара
-$data = json_decode(file_get_contents("php://input"));
+$data = (object) $_POST;
+// подготовка объекта
+$product = Product::find(['id' => intval($data->id)]);
 
-// установим id товара для удаления
-$product->id = $data->id ?? 0;
+if(!$product) {
+    // код ответа - 503 Сервис не доступен
+    http_response_code(503);
+
+    // сообщим об этом пользователю
+    echo json_encode(["message" => "Не удалось удалить товар."]);
+
+    return;
+}
+
 
 // удаление товара
-if ($product->id > 0 && $product->delete()) {
+if ($product->delete()) {
 
     // код ответа - 200 ok
     http_response_code(200);

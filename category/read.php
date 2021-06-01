@@ -44,5 +44,5 @@ if ($num > 0) {
     http_response_code(404);
 
     // сообщаем пользователю, что товары не найдены
-    echo json_encode(["message" => "Товары не найдены."], JSON_UNESCAPED_UNICODE);
+    echo json_encode(["message" => "Категории не найдены."], JSON_UNESCAPED_UNICODE);
 }

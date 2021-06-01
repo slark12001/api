@@ -6,6 +6,8 @@ header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/api/vendor/autoload.php';
+if ($_SERVER['REQUEST_METHOD'] != "POST")
+    return;
 
 $database = new Database();
 $db = $database->getConnection();
@@ -13,14 +15,13 @@ $db = $database->getConnection();
 $category = new Category($db);
 
 // получаем отправленные данные
-$data = json_decode(file_get_contents("php://input"));
+$data = (object) $_POST;
 
 
 // убеждаемся, что данные не пусты
 if (
     !empty($data->name)
 ) {
-
 
     $category->name = $data->name;
     $category->is_enabled = (isset($data->is_enabled) && $data->is_enabled === true) ? 1 : 0 ;

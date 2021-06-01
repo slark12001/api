@@ -12,8 +12,10 @@ $db = $database->getConnection();
 
 $product = new Product($db);
 
+if($_SERVER['REQUEST_METHOD'] != 'POST')
+    return false;
 // получаем отправленные данные
-$data = json_decode(file_get_contents("php://input"));
+$data = (object) $_POST;
 
 
 // убеждаемся, что данные не пусты
@@ -22,10 +24,10 @@ if (
 ) {
 
     // устанавливаем значения свойств товара
-    $product->name = $data->name ?? '';
-    $product->is_enabled = ($data->is_enabled === true) ? 1 : 0 ;
-    $product->description = $data->description ?? '';
-    $product->announce = $data->announce ?? '';
+    $product->name = $data->name ?? null;
+    $product->is_enabled = $data->is_enabled ?? 0;
+    $product->description = $data->description ?? null;
+    $product->announce = $data->announce ?? null;
 
     // создание товара
     if ($product->create()) {
@@ -35,6 +37,9 @@ if (
 
         // сообщим пользователю
         echo json_encode(["message" => "Товар был создан."], JSON_UNESCAPED_UNICODE);
+
+        if($category_id = intval($data->category_id))
+            $product->addInCategory($category_id);
     } // если не удается создать товар, сообщим пользователю
     else {
 

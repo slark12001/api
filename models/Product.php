@@ -1,25 +1,22 @@
 <?php
 
 
-class Product
+class Product extends Base
 {
 
-    // подключение к базе данных и таблице 'shop_product'
-    private $conn;
     private string $table_name = "shop_product";
     private string $relations_table = 'shop_product_category';
 
     // свойства объекта
-    public int $id;
-    public bool $is_enabled;
-    public string|null $description;
-    public string|null $name;
-    public string|null $announce;
+    public  $id;
+    public  $is_enabled;
+    public  $description;
+    public  $name;
+    public  $announce;
 
-    // конструктор для соединения с базой данных
     public function __construct($db)
     {
-        $this->conn = $db;
+        parent::__construct($db);
     }
 
     public function read($category_id = false)
@@ -32,7 +29,7 @@ class Product
                 " . $this->table_name . " 
                 WHERE is_enabled = 1";
 
-        if($category_id) {
+        if ($category_id) {
             $query .= " and id IN (select product_id from " . $this->relations_table . " where category_id = $category_id)";
         }
         // подготовка запроса
@@ -57,9 +54,12 @@ class Product
         $stmt = $this->conn->prepare($query);
 
         // очистка
-        $this->name = htmlspecialchars(strip_tags($this->name));
-        $this->description = htmlspecialchars(strip_tags($this->description));
-        $this->announce = htmlspecialchars(strip_tags($this->announce));
+        if (!empty($this->name))
+            $this->clear($this->name);
+        if (!empty($this->description))
+            $this->clear($this->description);
+        if (!empty($this->announce))
+           $this->clear($this);
 
         // привязка значений
         $stmt->bindParam(":name", $this->name);
@@ -100,7 +100,7 @@ class Product
     {
         // запрос для обновления записи (товара)
         $query = "UPDATE
-                " . $this->table_name . "
+                {$this->table_name}
             SET
                 name = :name,
                 announce = :announce,
@@ -113,9 +113,13 @@ class Product
         $stmt = $this->conn->prepare($query);
 
         // очистка
-        $this->name = htmlspecialchars(strip_tags($this->name));
-        $this->description = htmlspecialchars(strip_tags($this->description));
-        $this->announce = htmlspecialchars(strip_tags($this->announce));
+        if (!empty($this->name))
+            $this->clear($this->name);
+        if (!empty($this->description))
+           $this->clear($this->description);
+        if (!empty($this->announce))
+            $this->clear($this->announce);
+
 
         // привязываем значения
         $stmt->bindParam(':name', $this->name);
@@ -131,4 +135,62 @@ class Product
 
         return false;
     }
+
+
+
+    public static function find(array $condition = [])
+    {
+        $database = new Database();
+        $model = new Product($database->getConnection());
+        $table = $model->table_name;
+        $query = "Select * from $table where ";
+        $first_column = false;
+        foreach ($condition as $column => $value) {
+            if (!$first_column) {
+                $query .= $column;
+                $first_column = true;
+            } else {
+                $query .= " AND $column";
+            }
+            if (is_array($value))
+                $query .= " IN (" . implode(", ", $value) . ")";
+            else
+                $query .= " = $value";
+        }
+
+        $stmt = $model->conn->prepare($query);
+        $stmt->execute();
+
+        if($stmt->rowCount() > 0)
+        {
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                extract($row);
+
+                $model->id = $id;
+                $model->name = $name;
+                $model->description = $description;
+                $model->is_enabled = $is_enabled;
+                $model->announce = $announce;
+            }
+
+            return $model;
+        } else
+            return false;
+
+    }
+
+    public function addInCategory (int $category): bool
+    {
+        $last_id = $this->conn->lastInsertId();
+        $query = "INSERT INTO {$this->relations_table} ( category_id, product_id ) VALUES ( $category , $last_id )";
+
+        $stmt = $this->conn->prepare($query);
+        if ($stmt->execute()) {
+            return true;
+        }
+
+        return false;
+
+    }
+
 }

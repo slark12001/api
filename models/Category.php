@@ -1,23 +1,22 @@
 <?php
 
 
-class Category
+class Category extends Base
 {
     // подключение к базе данных и таблице 'shop_product'
-    private $conn;
     private string $table_name = "shop_category";
     private string $relations_table = 'shop_product_category';
 
     // свойства объекта
-    public int $id;
-    public bool $is_enabled;
-    public int $parent;
-    public string|null $name;
+    public  $id;
+    public  $is_enabled;
+    public  $parent;
+    public  $name;
 
     // конструктор для соединения с базой данных
     public function __construct($db)
     {
-        $this->conn = $db;
+        parent::__construct($db);
     }
 
     public function read()
@@ -45,7 +44,7 @@ class Category
 
         // запрос для вставки (создания) записей
         $query = "INSERT INTO
-                " . $this->table_name . "
+                $this->table_name
             SET
                 name=:name, is_enabled = :is_enabled, parent = :parent";
 
@@ -53,7 +52,7 @@ class Category
         $stmt = $this->conn->prepare($query);
 
         // очистка
-        $this->name = htmlspecialchars(strip_tags($this->name));
+        $this->clear($this->name);
 
         // привязка значений
         $stmt->bindParam(":name", $this->name);
@@ -116,5 +115,44 @@ class Category
         }
 
         return false;
+    }
+
+    public static function find(array $condition = [])
+    {
+        $database = new Database();
+        $model = new static($database->getConnection());
+        $table = $model->table_name;
+        $query = "Select * from $table where ";
+        $first_column = false;
+        foreach ($condition as $column => $value) {
+            if (!$first_column) {
+                $query .= $column;
+                $first_column = true;
+            } else {
+                $query .= " AND $column";
+            }
+            if (is_array($value))
+                $query .= " IN (" . implode(", ", $value) . ")";
+            else
+                $query .= " = $value";
+        }
+
+        $stmt = $model->conn->prepare($query);
+        $stmt->execute();
+
+        if($stmt->rowCount() > 0)
+        {
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                extract($row);
+
+                $model->id = $id;
+                $model->parent = $parent;
+                $model->name = $name;
+                $model->is_enabled = $is_enabled;
+            }
+
+            return $model;
+        } else
+            return false;
     }
 }

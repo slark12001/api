@@ -7,37 +7,50 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/api/vendor/autoload.php';
-
+if ($_SERVER['REQUEST_METHOD'] != 'POST')
+    return false;
 // получаем соединение с базой данных
-$database = new Database();
-$db = $database->getConnection();
-
+//$database = new Database();
+//$db = $database->getConnection();
+$data = (object) $_POST;
+$product = Product::find(['id' => intval($data->id)]);
+if(!$product) {
+    // код ответа - 503 Сервис не доступен
+    http_response_code(503);
+    echo json_encode(['message' => 'Нет товара с данным id']);
+    return false;
+}
 // подготовка объекта
-$product = new Product($db);
+//$product = new Product($db);
 
 // получаем id товара для редактирования
-$data = json_decode(file_get_contents("php://input"));
+
+
+
+
 
 // установим id свойства товара для редактирования
-$product->id = intval($data->id);
+//$product->id = intval($data->id);
 
 // установим значения свойств товара
-$product->name = $data->name ?? '';
-$product->announce = $data->announce ?? '';
-$product->description = $data->description ?? '';
-$product->is_enabled = (isset($data->is_enabled) && $data->is_enabled === true) ? 1 : 0;
+if (isset($data->name))
+    $product->name = $data->name;
+if (isset($data->announce))
+    $product->announce = $data->announce;
+if (isset($data->description))
+    $product->description = $data->description;
+if (isset($data->is_enabled))
+    $product->is_enabled = $data->is_enabled;
 
 // обновление товара
-if ($product->id > 0 && $product->update()) {
+if ($product->update()) {
 
     // установим код ответа - 200 ok
     http_response_code(200);
 
     // сообщим пользователю
     echo json_encode(["message" => "Товар был обновлён."], JSON_UNESCAPED_UNICODE);
-}
-
-// если не удается обновить товар, сообщим пользователю
+} // если не удается обновить товар, сообщим пользователю
 else {
 
     // код ответа - 503 Сервис не доступен

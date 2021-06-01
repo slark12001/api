@@ -7,34 +7,39 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/api/vendor/autoload.php';
-
+if ($_SERVER['REQUEST_METHOD'] != 'POST')
+    return;
 // получаем соединение с базой данных
-$database = new Database();
-$db = $database->getConnection();
-
+//$database = new Database();
+//$db = $database->getConnection();
+$data = (object) $_POST;
 // подготовка объекта
-$product = new Product($db);
+$category = Category::find(['id' => intval($data->id)]);
+if(!$category) {
+    // код ответа - 503 Сервис не доступен
+    http_response_code(503);
 
-// получаем id товара для редактирования
-$data = json_decode(file_get_contents("php://input"));
+    // сообщение пользователю
+    echo json_encode(["message" => "Невозможно обновить категорию."], JSON_UNESCAPED_UNICODE);
 
-// установим id свойства товара для редактирования
-$product->id = intval($data->id);
+    return false;
+}
 
-// установим значения свойств товара
-$product->name = $data->name;
-$product->announce = $data->announce;
-$product->description = $data->description;
-$product->is_enabled = ($data->is_enabled === true) ? 1 : 0;
+if (isset($data->name))
+    $category->name = $data->name;
+if (isset($data->description))
+    $category->description = $data->description;
+if (isset($data->is_enabled))
+    $category->is_enabled = $data->is_enabled;
 
 // обновление товара
-if ($product->update()) {
+if ($category->update()) {
 
     // установим код ответа - 200 ok
     http_response_code(200);
 
     // сообщим пользователю
-    echo json_encode(["message" => "Товар был обновлён."], JSON_UNESCAPED_UNICODE);
+    echo json_encode(["message" => "Категория была обновлена."], JSON_UNESCAPED_UNICODE);
 }
 
 // если не удается обновить товар, сообщим пользователю
@@ -44,5 +49,5 @@ else {
     http_response_code(503);
 
     // сообщение пользователю
-    echo json_encode(["message" => "Невозможно обновить товар."], JSON_UNESCAPED_UNICODE);
+    echo json_encode(["message" => "Невозможно обновить категорию."], JSON_UNESCAPED_UNICODE);
 }

@@ -7,10 +7,10 @@ class Database
     private string $db_name = "test";
     private string $username = "root";
     private string $password = "";
-    public PDO|null $conn;
+    public  $conn;
 
     // получаем соединение с БД
-    public function getConnection(): PDO|null
+    public function getConnection()
     {
 
         $this->conn = null;
