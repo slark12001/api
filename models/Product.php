@@ -14,6 +14,9 @@ class Product extends Base
     public  $name;
     public  $announce;
 
+    //
+    private int $last_id;
+
     public function __construct($db)
     {
         parent::__construct($db);
@@ -69,6 +72,7 @@ class Product extends Base
 
         // выполняем запрос
         if ($stmt->execute()) {
+            $this->last_id = $this->conn->lastInsertId();
             return true;
         }
 
@@ -181,8 +185,8 @@ class Product extends Base
 
     public function addInCategory (int $category): bool
     {
-        $last_id = $this->conn->lastInsertId();
-        $query = "INSERT INTO {$this->relations_table} ( category_id, product_id ) VALUES ( $category , $last_id )";
+
+        $query = "INSERT INTO {$this->relations_table} ( category_id, product_id ) VALUES ( $category , $this->last_id )";
 
         $stmt = $this->conn->prepare($query);
         if ($stmt->execute()) {

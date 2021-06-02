@@ -7,9 +7,8 @@ header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
 // подключим файл для соединения с базой и объектом Product
-require_once $_SERVER['DOCUMENT_ROOT'] . '/api/vendor/autoload.php';
-if($_SERVER['REQUEST_METHOD'] != "POST")
-    return;
+require_once $_SERVER['DOCUMENT_ROOT'] . '/vendor/autoload.php';
+
 // получаем соединение с БД
 //$database = new Database();
 //$db = $database->getConnection();
